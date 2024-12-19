@@ -6,6 +6,14 @@ disable=
     C0304, # missing-final-newline
     C0321, # multiple-statements
     C0326, # bad-whitespace
+    R0022  # useless-option-value
 
 [FORMAT]
 max-line-length=100
+
+[IMPORTS]
+# List of modules that can be imported at any level
+allow-any-import-level=flask,statistics,requests,datetime
+
+[MESSAGES CONTROL]
+disable=wrong-import-order

@@ -1,7 +1,7 @@
-from flask import Flask, jsonify
-import requests
 from datetime import datetime, timedelta, UTC
 from statistics import mean
+from flask import Flask, jsonify
+import requests
 
 app = Flask(__name__)
 
@@ -20,7 +20,7 @@ def get_box_data(box_id):
     Fetch data for a specific senseBox including all its sensors and latest measurements.
     """
     url = f"{OPENSENSEMAP_BASE_URL}/boxes/{box_id}"
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)  # Added timeout
     if response.status_code == 200:
         return response.json()
     return None
@@ -81,8 +81,8 @@ def temperature():
         return jsonify({"error": "No temperature data available"}), 404
 
     avg_temperature = round(mean(temperatures), 2)
-    return jsonify({"average_temperature": avg_temperature})
+    return jsonify({"temperature": avg_temperature})
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
