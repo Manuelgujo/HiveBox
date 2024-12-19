@@ -1,0 +1,11 @@
+[MASTER]
+disable=
+    C0111, # missing-docstring
+    C0103, # invalid-name
+    C0303, # trailing-whitespace
+    C0304, # missing-final-newline
+    C0321, # multiple-statements
+    C0326, # bad-whitespace
+
+[FORMAT]
+max-line-length=100
