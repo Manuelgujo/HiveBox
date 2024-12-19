@@ -14,4 +14,4 @@ def test_temperature():
     with app.test_client() as client:
         response = client.get("/temperature")
         assert response.status_code == 200
-        assert "average_temperature" in response.json
+        assert "temperature" in response.json
