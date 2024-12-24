@@ -17,7 +17,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY app.py .
+COPY app.py config.py ./
+COPY .env ./
 
 # Set proper ownership
 RUN chown -R appuser:appuser /app

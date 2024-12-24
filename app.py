@@ -2,35 +2,21 @@ from datetime import datetime, timedelta, UTC
 from statistics import mean
 from flask import Flask, jsonify
 import requests
-
-app = Flask(__name__)
-
-# Configuration
-SENSEBOX_IDS = [
-    "5e6d01eeee48fc001db20a8e",
-    "5c633de5a100840019a290b7",
-    "5c633d60a100840019a26f69",
-]
-OPENSENSEMAP_BASE_URL = "https://api.opensensemap.org"
-VERSION = "v0.0.1"
+from config import config
+import os
 
 
 def get_box_data(box_id):
-    """
-    Fetch data for a specific senseBox including all its sensors and latest measurements.
-    """
-    url = f"{OPENSENSEMAP_BASE_URL}/boxes/{box_id}"
-    response = requests.get(url, timeout=10)  # Added timeout
+    """Fetch data for a specific senseBox."""
+    url = f"{app.config['OPENSENSEMAP_BASE_URL']}/boxes/{box_id}"
+    response = requests.get(url, timeout=10)
     if response.status_code == 200:
         return response.json()
     return None
 
 
 def get_temperature_from_box(box_data):
-    """
-    Extract temperature data from a box's sensor data.
-    Returns the most recent temperature reading if available and not older than 1 hour.
-    """
+    """Extract temperature data from a box's sensor data."""
     if not box_data or "sensors" not in box_data:
         return None
 
@@ -45,7 +31,6 @@ def get_temperature_from_box(box_data):
             and "lastMeasurement" in sensor
             and sensor["lastMeasurement"]
         ):
-
             measurement_time = datetime.fromisoformat(
                 sensor["lastMeasurement"]["createdAt"].replace("Z", "+00:00")
             )
@@ -59,30 +44,55 @@ def get_temperature_from_box(box_data):
     return None
 
 
-@app.route("/version")
-def version():
-    """Return the API version."""
-    return jsonify({"version": VERSION})
+def get_temperature_status(temp):
+    """Determine temperature status based on value."""
+    if temp < 10:
+        return "Too Cold"
+    elif temp <= 36:
+        return "Good"
+    else:
+        return "Too Hot"
 
 
-@app.route("/temperature")
-def temperature():
-    """Return the average temperature from all senseBoxes."""
-    temperatures = []
+def create_app(config_name=None):
+    """Application factory function."""
+    if config_name is None:
+        config_name = os.getenv("FLASK_ENV", "development")
 
-    for box_id in SENSEBOX_IDS:
-        data = get_box_data(box_id)
-        if data:
-            temp = get_temperature_from_box(data)
-            if temp is not None:
-                temperatures.append(temp)
+    app = Flask(__name__)
+    app.config.from_object(config[config_name])
 
-    if not temperatures:
-        return jsonify({"error": "No temperature data available"}), 404
+    @app.route("/version")
+    def version():
+        """Return the API version."""
+        return jsonify({"version": app.config["APP_VERSION"]})
 
-    avg_temperature = round(mean(temperatures), 2)
-    return jsonify({"temperature": avg_temperature})
+    @app.route("/temperature")
+    def temperature():
+        """Return the average temperature and status from all senseBoxes."""
+        temperatures = []
 
+        for box_id in app.config["SENSEBOX_IDS"]:
+            if not box_id:  # Skip empty strings
+                continue
+            data = get_box_data(box_id)
+            if data:
+                temp = get_temperature_from_box(data)
+                if temp is not None:
+                    temperatures.append(temp)
+
+        if not temperatures:
+            return jsonify({"error": "No temperature data available"}), 404
+
+        avg_temperature = round(mean(temperatures), 2)
+        status = get_temperature_status(avg_temperature)
+
+        return jsonify({"temperature": avg_temperature, "status": status})
+
+    return app
+
+
+app = create_app()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
