@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hivebox
+  labels:
+    app: hivebox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hivebox
+  template:
+    metadata:
+      labels:
+        app: hivebox
+    spec:
+      containers:
+      - name: hivebox
+        image: hivebox:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: SENSEBOX_IDS
+          valueFrom:
+            configMapKeyRef:
+              name: hivebox-config
+              key: sensebox_ids
+        readinessProbe:
+          httpGet:
+            path: /version
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /version
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 20
