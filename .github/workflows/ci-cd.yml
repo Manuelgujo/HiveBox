@@ -182,10 +182,10 @@ jobs:
 
     - name: Build and tag Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository_owner,,}}/hivebox:latest .
-        docker build -t ghcr.io/${{ github.repository_owner,,}}/hivebox:${{ github.sha }} .
-    
+        docker build -t ghcr.io/${{ toLowerCase(github.repository_owner) }}/hivebox:latest .
+        docker build -t ghcr.io/${{ toLowerCase(github.repository_owner) }}/hivebox:${{ github.sha }} .
+        
     - name: Push Docker images
       run: |
-        docker push ghcr.io/${{ github.repository_owner,,}}/hivebox:latest
-        docker push ghcr.io/${{ github.repository_owner,,}}/hivebox:${{ github.sha }}
+        docker push ghcr.io/${{ toLowerCase(github.repository_owner) }}/hivebox:latest
+        docker push ghcr.io/${{ toLowerCase(github.repository_owner) }}/hivebox:${{ github.sha }}
