@@ -1,0 +1,77 @@
+name: Integration Tests and Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+        
+    - name: Run tests with coverage
+      run: |
+        pytest --cov=./ --cov-report=xml
+
+  sonarqube:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Ensure Shell Availability
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dash bash
+        if [ ! -L /bin/sh ]; then sudo ln -sf /bin/dash /bin/sh; fi
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install SonarScanner
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y unzip
+        curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
+        unzip sonar-scanner.zip
+        export SONAR_SCANNER_HOME=$(pwd)/sonar-scanner-4.6.2.2472-linux
+        echo "SONAR_SCANNER_HOME=$SONAR_SCANNER_HOME" >> $GITHUB_ENV
+        echo "PATH=$SONAR_SCANNER_HOME/bin:$PATH" >> $GITHUB_ENV
+        echo "SonarScanner home is set to: $SONAR_SCANNER_HOME"
+        ls -l $SONAR_SCANNER_HOME/bin
+
+  terrascan:
+    runs-on: ubuntu-latest
+    needs: sonarqube
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Terrascan
+      run: |
+        curl -sSLo terrascan.tar.gz https://github.com/tenable/terrascan/releases/download/v1.12.0/terrascan_1.12.0_Linux_x86_64.tar.gz
+        tar -xzvf terrascan.tar.gz
+        sudo mv terrascan /usr/local/bin/
+        terrascan version
+
+    - name: Run Terrascan
+      run: |
+        terrascan scan -i k8s -d k8s/
