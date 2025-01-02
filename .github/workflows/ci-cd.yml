@@ -55,8 +55,8 @@ jobs:
 
     - name: Test endpoints
       run: |
-        curl localhost/version
-        curl localhost/temperature
+        curl localhost:5000/version
+        curl localhost:5000/temperature
 
   test:
     runs-on: ubuntu-latest
