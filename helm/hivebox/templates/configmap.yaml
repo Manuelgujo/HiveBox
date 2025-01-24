@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
+data:
+  sensebox_ids: {{ .Values.config.sensebox_ids | quote }}
+  MINIO_HOST: "{{ .Release.Name }}-minio:9000"  # Updated format
+  MINIO_ACCESS_KEY: "{{ .Values.minio.auth.rootUser }}"
+  MINIO_SECRET_KEY: "{{ .Values.minio.auth.rootPassword }}"
+  MINIO_BUCKET: "hivebox"
+  REDIS_HOST: "{{ .Release.Name }}-redis"
+  REDIS_PORT: "6379"

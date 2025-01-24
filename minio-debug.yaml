@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: minio-debug
+  namespace: hivebox-dev
+spec:
+  containers:
+  - name: mc
+    image: minio/mc
+    command: ['sleep', '3600']

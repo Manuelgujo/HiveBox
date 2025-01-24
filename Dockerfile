@@ -1,4 +1,3 @@
-# Use specific Python slim image for optimal size
 FROM python:3.11-slim
 
 # Set working directory
@@ -6,6 +5,12 @@ WORKDIR /app
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Install debugging tools and clean up in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    procps \
+    iproute2 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -27,5 +32,4 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Configure container startup
-ENTRYPOINT ["python"]
-CMD ["app.py"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000"]

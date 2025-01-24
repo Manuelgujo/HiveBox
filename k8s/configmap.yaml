@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: hivebox-config
-data:
-  sensebox_ids: "5e6d01eeee48fc001db20a8e,5c633de5a100840019a290b7,5c633d60a100840019a26f69"

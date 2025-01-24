@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hivebox.fullname" . }}
+  labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hivebox.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hivebox.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-config
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 5000
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /version
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20

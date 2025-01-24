@@ -1,0 +1,44 @@
+{{- if .Values.minio.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-minio
+  labels:
+    {{- include "hivebox.labels" . | nindent 4 }}
+    app.kubernetes.io/component: minio
+spec:
+  selector:
+    matchLabels:
+      {{- include "hivebox.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: minio
+  template:
+    metadata:
+      labels:
+        {{- include "hivebox.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: minio
+    spec:
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+        - name: minio
+          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
+          args:
+            - server
+            - /data
+          env:
+            - name: MINIO_ROOT_USER
+              value: {{ .Values.minio.auth.rootUser }}
+            - name: MINIO_ROOT_PASSWORD
+              value: {{ .Values.minio.auth.rootPassword }}
+          ports:
+            - containerPort: 9000
+          resources:
+            {{- toYaml .Values.minio.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-minio-pvc
+{{- end }}

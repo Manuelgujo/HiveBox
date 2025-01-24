@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hivebox
+description: A Helm chart for HiveBox - A scalable RESTful API for Beekeepers
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

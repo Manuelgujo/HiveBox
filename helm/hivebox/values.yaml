@@ -1,0 +1,84 @@
+# Default values for hivebox
+replicaCount: 1
+
+image:
+  repository: hivebox
+  tag: latest
+  pullPolicy: Never
+
+nameOverride: ""
+fullnameOverride: ""
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5000
+
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 7.2-alpine
+  persistence:
+    existingClaim: hivebox-redis-pvc
+
+minio:
+  enabled: true
+  image:
+    repository: minio/minio
+    tag: latest
+  persistence:
+    existingClaim: hivebox-minio-pvc
+  auth:
+    rootUser: minioadmin
+    rootPassword: minioadmin
+
+config:
+  sensebox_ids: "5e6d01eeee48fc001db20a8e,5c633de5a100840019a290b7,5c633d60a100840019a26f69"
+  flask_env: "production"
+
+#resources:
+#  requests:
+#    cpu: 200m
+#    memory: 256Mi
+#  limits:
+#    cpu: 500m
+#    memory: 512Mi
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 5000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: /version
+    port: 5000
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  hosts:
+    - host: ""
+      paths:
+        - path: "/(.*)"
+          pathType: Prefix
